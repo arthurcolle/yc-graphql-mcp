@@ -131,7 +131,7 @@ Use `yc_verify_application_update` to compare expected answers after an interrup
 
 Download the `.mcpb` from [Releases](https://github.com/arthurcolle/yc-graphql-mcp/releases) for compatible desktop hosts, or use the source installation above. The bundle includes production dependencies and has been validated against the official MCPB schema and tested after extraction. It contains no session or application records. See [bundle setup](docs/bundle.md).
 
-Official registry name: `io.github.arthurcolle/yc-graphql-mcp`. The registry points to the exact versioned bundle and its SHA-256. It does not host your YC session or an HTTP MCP endpoint. [Publication details](registry/README.md) describe validation, OIDC publishing and recovery. npm publication is separate and is not required for this distribution route.
+Official registry name: `io.github.arthurcolle/yc-graphql-mcp`. [Official listing](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.arthurcolle%2Fyc-graphql-mcp/versions/latest) · [Glama listing](https://glama.ai/mcp/servers/arthurcolle/yc-graphql-mcp). The registry points to the exact versioned bundle and its SHA-256. It does not host your YC session or an HTTP MCP endpoint. [Publication details](registry/README.md) describe validation, OIDC publishing and recovery. npm publication is separate and is not required for this distribution route.
 
 ## Mutation contract
 

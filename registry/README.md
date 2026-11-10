@@ -11,3 +11,5 @@ The manually dispatched `Publish MCP Registry` GitHub workflow checks an existin
 Registry versions and release artifacts are immutable once published. Upload collisions stop the workflow; inspect existing artifacts and the registry before retrying after a partial failure. Never replace a published bundle under the same URL. The public registry contains metadata and installation artifacts, not a hosted YC session or live MCP HTTP endpoint.
 
 npm publication is separate; the package remains private to prevent accidental npm publication. The MCPB route does not require npm publisher credentials. `glama.json` declares repository maintainership for directory discovery; it does not itself prove a directory listing exists.
+
+The root `server.json` is the verified public metadata for the latest published release. It includes the actual immutable bundle URL and SHA-256. The generated artifact remains the input to publishing; update the root copy only after successful publication and anonymous read-back.
