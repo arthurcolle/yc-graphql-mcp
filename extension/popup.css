@@ -1,0 +1,18 @@
+:root { color-scheme: light dark; font: 14px/1.45 system-ui, sans-serif; --accent: #f26522; }
+* { box-sizing: border-box; }
+body { width: 360px; margin: 0; padding: 22px; background: light-dark(#faf9f6, #191918); color: light-dark(#24231f, #f1eee6); }
+header { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; }
+.mark { background: var(--accent); color: white; font-weight: 700; padding: 10px; border-radius: 5px; }
+h1 { font-size: 19px; margin: 0; letter-spacing: -.3px; }
+header p { margin: 2px 0 0; opacity: .7; font-size: 12px; }
+label { display: block; font-weight: 600; margin: 14px 0 6px; }
+select, textarea { width: 100%; border: 1px solid light-dark(#c9c5bc, #514f48); background: light-dark(white, #242421); color: inherit; border-radius: 5px; padding: 9px; font: inherit; }
+textarea { font-family: ui-monospace, monospace; font-size: 11px; resize: vertical; }
+.help { font-size: 11px; opacity: .7; margin: 6px 0 10px; }
+.toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.actions { display: flex; gap: 8px; margin-top: 19px; }
+button { font: inherit; padding: 8px 14px; border: 1px solid light-dark(#c9c5bc, #514f48); border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
+#connect { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+output { display: block; margin-top: 18px; padding-top: 12px; border-top: 1px solid light-dark(#dedbd2, #45433e); font-size: 12px; overflow-wrap: anywhere; }

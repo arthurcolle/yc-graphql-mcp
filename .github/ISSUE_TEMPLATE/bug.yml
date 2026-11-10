@@ -1,0 +1,20 @@
+name: Bug report
+description: Report a reproducible issue with synthetic data.
+body:
+  - type: markdown
+    attributes:
+      value: Do not include session headers, private answers, application IDs or personal financial data. Report vulnerabilities through the security policy.
+  - type: input
+    id: version
+    attributes:
+      label: Version and runtime
+      placeholder: v2.0.0, Node 24, macOS
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal synthetic reproduction
+      description: Include the command or tool call, expected behavior, actual behavior and a redacted stable error code.
+    validations:
+      required: true

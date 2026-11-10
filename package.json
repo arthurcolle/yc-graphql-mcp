@@ -1,0 +1,84 @@
+{
+  "name": "yc-graphql-mcp",
+  "version": "2.0.0",
+  "description": "Direct HTTP YC GraphQL MCP server with private sessions and durable mutation receipts",
+  "type": "module",
+  "private": true,
+  "author": "Arthur Colle",
+  "license": "MIT",
+  "homepage": "https://github.com/arthurcolle/yc-graphql-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arthurcolle/yc-graphql-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arthurcolle/yc-graphql-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "graphql",
+    "y-combinator",
+    "yc",
+    "ai-agents",
+    "distributed-systems"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "bin": {
+    "yc-graphql-mcp": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "node scripts/clean.mjs && tsc && node scripts/build-browser.mjs",
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "test:e2e": "node --import tsx --test test/e2e/*.test.ts",
+    "start": "node dist/cli.js",
+    "login": "node dist/cli.js login",
+    "live:check": "node scripts/live-smoke.mjs",
+    "format": "prettier --write src test scripts/build-browser.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md",
+    "format:check": "prettier --check src test scripts/build-browser.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md",
+    "public:check": "node scripts/verify-public.mjs",
+    "pack:verify": "node scripts/verify-package.mjs",
+    "prepack": "npm run build",
+    "verify": "npm run format:check && npm run check && npm run build && npm test"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "extension/dist/**",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "docs/tool-contract.md",
+    "docs/operations.md",
+    "docs/assets/**"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "graphql": "17.1.0",
+    "playwright": "1.65.0",
+    "tough-cookie": "6.1.0",
+    "ws": "8.22.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/chrome": "0.3.7",
+    "@types/node": "22.20.5",
+    "@types/ws": "8.18.2",
+    "ajv": "8.20.0",
+    "esbuild": "0.28.2",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

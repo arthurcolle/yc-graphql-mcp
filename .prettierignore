@@ -1,0 +1,6 @@
+node_modules/
+dist/
+extension/dist/
+.yc-graphql-mcp/
+package-lock.json
+artifacts/

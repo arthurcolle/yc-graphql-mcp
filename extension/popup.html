@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>YC MCP Bridge</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><span class="mark">YC</span><div><h1>GraphQL bridge</h1><p>Your browser session stays here.</p></div></header>
+  <form id="pair">
+    <label for="tab">Application tab</label><select id="tab" required aria-describedby="tab-help"></select>
+    <p id="tab-help" class="help">Only requests to apply.ycombinator.com run in this tab.</p>
+    <label for="config">Pairing JSON</label><textarea id="config" rows="5" required spellcheck="false" autocomplete="off" placeholder='Paste the JSON from yc_connection or the connection command'></textarea>
+    <label class="toggle"><input id="mutations" type="checkbox"> Allow reviewed mutations</label>
+    <p class="help">Also requires the server’s mutation flag. Each change needs an exact preview and commit.</p>
+    <div class="actions"><button id="connect" type="submit">Connect</button><button id="disconnect" type="button">Disconnect</button></div>
+  </form>
+  <output id="status" role="status" aria-live="polite">Checking connection…</output>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

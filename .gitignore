@@ -1,0 +1,21 @@
+node_modules/
+dist/
+extension/dist/
+.yc-graphql-mcp/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+artifacts/
+/docs/extension-preview.png
+*.tgz
+# Account-specific workspace helpers and original application example.
+/examples/
+/scripts/*.mjs
+!/scripts/build-browser.mjs
+!/scripts/clean.mjs
+!/scripts/verify-package.mjs
+!/scripts/live-smoke.mjs
+!/scripts/verify-public.mjs
