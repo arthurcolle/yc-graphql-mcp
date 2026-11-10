@@ -27,6 +27,7 @@ export const taskSchema = z.discriminatedUnion('method', [
   }),
   z.strictObject({ method: z.literal('introspectSchema') }),
   z.strictObject({ method: z.literal('inspectLoadedScripts'), input: inspectSchema }),
+  z.strictObject({ method: z.literal('inspectEditability'), appUuid: uuid }),
 ]);
 export type BrowserTask = z.infer<typeof taskSchema>;
 export const helloSchema = z.strictObject({

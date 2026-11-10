@@ -5,11 +5,11 @@
 **Talk to your YC application from your MCP client. Read answers, review changes, and verify every save.**
 
 [![Verify](https://github.com/arthurcolle/yc-graphql-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/arthurcolle/yc-graphql-mcp/actions/workflows/ci.yml)
-**v2.0.0 · 17 tools · Node 22 / 24 / 26 · MIT**
+**v2.1.0 · 22 tools · Node 22 / 24 / 26 · MIT**
 
 [Quick start](#install-and-connect) · [Tools](#use) · [How saves work](#mutation-contract) · [Operations](docs/operations.md) · [Releases](https://github.com/arthurcolle/yc-graphql-mcp/releases)
 
-A local MCP server for **direct HTTP access to `https://apply.ycombinator.com/graphql`**. Version 2.0.0 includes 17 tools, private session capture and rotation, durable mutation receipts, application/profile reads, operation discovery, and an optional Chrome extension transport.
+A local MCP server for **direct HTTP access to `https://apply.ycombinator.com/graphql`**. Version 2.1.0 includes 22 tools, private session capture and rotation, durable mutation receipts, application/profile reads, operation discovery, and an optional Chrome extension transport.
 
 Node sends API requests. A browser is needed only for manual sign-in, unless you explicitly choose the extension transport. This is an unofficial client; YC owns the upstream API, authentication rules, and application edit permissions.
 
@@ -71,25 +71,30 @@ The auth file must be a regular file owned by you with mode 0600. Its directory 
 
 Start with `yc_status`, then `yc_list_applications` and `yc_get_application`. Built-in reads use operations observed in YC's own application bundle and work without schema introspection. They omit invitation tokens, signed media URLs, product login credentials, and unnecessary contact/address fields.
 
-| Tool                     | Purpose                                                                       |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| `yc_status`              | Local auth state, transport, storage health, pending work and mutation policy |
-| `yc_connection`          | Setup information; extension pairing JSON in browser mode                     |
-| `yc_list_applications`   | Application summaries, founder references and edit flags                      |
-| `yc_get_application`     | Answers and status for an application UUID                                    |
-| `yc_get_founder_profile` | Founder narrative, education and work history for a bio UUID                  |
-| `yc_describe_schema`     | GraphQL root types, if YC allows introspection                                |
-| `yc_describe_type`       | Type fields, inputs, arguments, enums and deprecations                        |
-| `yc_introspect_schema`   | Full schema, capped at 2 MB                                                   |
-| `yc_inspect_scripts`     | Search referenced JavaScript without executing it                             |
-| `yc_query`               | Execute one explicitly named query                                            |
-| `yc_register_operation`  | Save an observed document locally; no execution                               |
-| `yc_list_operations`     | List saved documents                                                          |
-| `yc_remove_operation`    | Remove a saved document locally                                               |
-| `yc_run_operation`       | Execute a saved query with variables                                          |
-| `yc_prepare_mutation`    | Inert exact-payload preview with a durable receipt                            |
-| `yc_commit_mutation`     | Commit a reviewed preview once                                                |
-| `yc_mutation_receipts`   | Inspect recent or specific durable receipts                                   |
+| Tool                            | Purpose                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| `yc_get_editability`            | Live form fields and current application permissions                          |
+| `yc_prepare_application_update` | Typed text changes with exact diffs and preconditions                         |
+| `yc_commit_application_update`  | Recheck, commit once, and automatically verify saved answers                  |
+| `yc_verify_application_update`  | Compare current answers with expected values without writing                  |
+| `yc_export_application`         | Return private Markdown to your MCP host; writes no files                     |
+| `yc_status`                     | Local auth state, transport, storage health, pending work and mutation policy |
+| `yc_connection`                 | Setup information; extension pairing JSON in browser mode                     |
+| `yc_list_applications`          | Application summaries, founder references and edit flags                      |
+| `yc_get_application`            | Answers and status for an application UUID                                    |
+| `yc_get_founder_profile`        | Founder narrative, education and work history for a bio UUID                  |
+| `yc_describe_schema`            | GraphQL root types, if YC allows introspection                                |
+| `yc_describe_type`              | Type fields, inputs, arguments, enums and deprecations                        |
+| `yc_introspect_schema`          | Full schema, capped at 2 MB                                                   |
+| `yc_inspect_scripts`            | Search referenced JavaScript without executing it                             |
+| `yc_query`                      | Execute one explicitly named query                                            |
+| `yc_register_operation`         | Save an observed document locally; no execution                               |
+| `yc_list_operations`            | List saved documents                                                          |
+| `yc_remove_operation`           | Remove a saved document locally                                               |
+| `yc_run_operation`              | Execute a saved query with variables                                          |
+| `yc_prepare_mutation`           | Inert exact-payload preview with a durable receipt                            |
+| `yc_commit_mutation`            | Commit a reviewed preview once                                                |
+| `yc_mutation_receipts`          | Inspect recent or specific durable receipts                                   |
 
 Resources: `yc://guide`, `yc://status`, `yc://operations`, `yc://receipts`, and `yc://receipts/{id}`. Prompts: `inspect_application` and `review_application_change`.
 
@@ -97,9 +102,40 @@ All tools return `{ ok, data?, error?, untrustedContent: true }`. Tool errors se
 
 YC can reject introspection. Use the built-in reads, observed operation registry, or bounded script inspection in that case. Stop on authentication or access restrictions; refreshing your own session is supported, bypassing restrictions is not.
 
+## Typed application updates
+
+`yc_get_editability` reads current GraphQL permissions and parses the authenticated edit forms. It returns field names, question labels, update kinds and required flags. Full-edit fields are never inferred from a GraphQL input type or another update form.
+
+Prepare text changes with `yc_prepare_application_update`:
+
+```json
+{
+  "appUuid": "63a4d22c-1096-443e-894b-349e9c46fabb",
+  "updateKind": "progress",
+  "changes": [
+    { "field": "howfar", "expectedValue": "Previous answer", "value": "Reviewed new answer" }
+  ],
+  "idempotencyKey": "fd01ac64-94bb-4e85-8f6d-289af6132c16"
+}
+```
+
+The example uses synthetic identifiers. Preparation reads current data and returns exact before/after values, but sends no mutation. Financial answers are protected unless `allowFinancialChanges: true` is explicitly supplied. Uploads, structured revenue tables and founder-profile changes use their dedicated/generic observed workflows.
+
+Commit its receipt and digest with `yc_commit_application_update`. Before dispatch, the server rechecks current answers, submission state and live field permissions. Concurrent edits stop the write; even the generic commit tool cannot bypass that guard. YC provides no atomic compare-and-swap, so a race after the final check remains possible.
+
+A typed commit reads the fields back automatically. `POSTCONDITION_FAILED` or `VERIFICATION_UNAVAILABLE` includes the terminal receipt and never resends. Verification evidence is returned to the caller, not persisted with private answers in the receipt journal. A receipt's `succeeded` status describes the explicit backend result; the separate verification describes current observed values.
+
+Use `yc_verify_application_update` to compare expected answers after an interruption, and `yc_export_application` for private Markdown. Neither changes application data. Previews expire on restart; durable receipt deduplication remains intact.
+
+## Registry and desktop bundle
+
+Download the `.mcpb` from [Releases](https://github.com/arthurcolle/yc-graphql-mcp/releases) for compatible desktop hosts, or use the source installation above. The bundle includes production dependencies and has been validated against the official MCPB schema and tested after extraction. It contains no session or application records. See [bundle setup](docs/bundle.md).
+
+Official registry name: `io.github.arthurcolle/yc-graphql-mcp`. The registry points to the exact versioned bundle and its SHA-256. It does not host your YC session or an HTTP MCP endpoint. [Publication details](registry/README.md) describe validation, OIDC publishing and recovery. npm publication is separate and is not required for this distribution route.
+
 ## Mutation contract
 
-Mutations are disabled by default. Enable them with `--allow-mutations`; browser mode additionally requires the extension toggle. Application edits still require authorization for the exact intended change.
+Mutations are disabled by default. Enable them with `--allow-mutations` or the explicit process setting `YC_ALLOW_MUTATIONS=true`; browser mode additionally requires the extension toggle. Application edits still require authorization for the exact intended change.
 
 1. Read the current application and its edit permissions.
 2. Prepare the exact named mutation, variables, and a UUID `idempotencyKey` using `yc_prepare_mutation`.
@@ -168,4 +204,4 @@ The package allowlist excludes local auth, applications/backups, journals, test 
 
 Made by [Distributed Systems](https://distributed.systems). Contributions are welcome; start with [CONTRIBUTING.md](CONTRIBUTING.md). Code is MIT licensed. The Distributed Systems name and copper wordmark remain brand assets; the license does not grant trademark rights. See [asset provenance](docs/assets/README.md).
 
-CI is configured for Node 22/24/26 and an isolated Chromium job. The workflow file is provided; a hosted CI run requires putting the checkout in a GitHub repository. Primary implementation references: [MCP TypeScript SDK](https://ts.sdk.modelcontextprotocol.io/v2/), [GraphQL validation](https://graphql.org/learn/validation/), [Node file APIs](https://nodejs.org/docs/latest-v22.x/api/fs.html), [tough-cookie](https://github.com/salesforce/tough-cookie), and [Playwright](https://playwright.dev/docs/browsers).
+CI verifies Node 22/24/26, an isolated Chromium job and a fresh desktop bundle installation. Primary implementation references: [MCP TypeScript SDK](https://ts.sdk.modelcontextprotocol.io/v2/), [GraphQL validation](https://graphql.org/learn/validation/), [Node file APIs](https://nodejs.org/docs/latest-v22.x/api/fs.html), [tough-cookie](https://github.com/salesforce/tough-cookie), and [Playwright](https://playwright.dev/docs/browsers).

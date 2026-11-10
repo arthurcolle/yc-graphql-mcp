@@ -9,6 +9,7 @@ import {
 } from '../graphql.js';
 import { assertJSON } from '../json.js';
 import { abortable } from '../deadline.js';
+import { parseEditForm, type EditDiscovery, type EditKind } from '../edit-forms.js';
 
 export interface BrowserEnvironment {
   location: Pick<Location, 'origin'>;
@@ -195,6 +196,67 @@ export function createYCGraphQLClient(env: BrowserEnvironment) {
     }
   }
 
+  async function inspectEditability(appUuid: string): Promise<EditDiscovery> {
+    assertOrigin();
+    if (!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}(?![\s\S])/i.test(appUuid))
+      throw new YCError('INVALID_APPLICATION', 'A UUID application identifier is required.');
+    const abort = new env.AbortController();
+    const signal = env.signal ? AbortSignal.any([env.signal, abort.signal]) : abort.signal;
+    const timer = env.setTimeout(() => abort.abort(), 25_000);
+    const result: EditDiscovery = { appUuid, forms: [], visibleUpdateKinds: [], unavailable: [] };
+    let bytes = 0;
+    try {
+      for (const kind of ['', 'full', 'progress', 'fundraise', 'cofounder'] as const) {
+        const response = await abortable(
+          env.fetch(`${YC_ORIGIN}/apps/${appUuid}/edit${kind ? '/' + kind : ''}`, {
+            credentials: 'same-origin',
+            mode: 'same-origin',
+            redirect: 'error',
+            cache: 'no-store',
+            signal,
+            headers: { Accept: 'text/html' },
+          }),
+          signal,
+        );
+        if (response.status === 404) {
+          void response.body?.cancel();
+          result.unavailable.push({ kind: kind || 'index', httpStatus: 404 });
+          continue;
+        }
+        if (!response.ok) {
+          void response.body?.cancel();
+          throw new YCError(
+            response.status === 401 || response.status === 403 ? 'AUTH_REQUIRED' : 'HTTP_ERROR',
+            'YC edit metadata is unavailable. No automatic retry was made.',
+          );
+        }
+        if (!(response.headers.get('content-type') ?? '').includes('text/html')) {
+          void response.body?.cancel();
+          throw new YCError('INVALID_EDIT_FORM', 'YC did not return edit-form HTML.');
+        }
+        const source = await readBounded(response, Math.min(2_000_000, 6_000_000 - bytes), signal);
+        bytes += new TextEncoder().encode(source).byteLength;
+        const parsed = parseEditForm(source, appUuid, kind as EditKind | '');
+        if (parsed.form) result.forms.push(parsed.form);
+        if (parsed.visibleUpdateKinds.length) result.visibleUpdateKinds = parsed.visibleUpdateKinds;
+      }
+      if (!result.forms.length)
+        throw new YCError(
+          'EDITABILITY_UNAVAILABLE',
+          'No recognized edit forms were found. The schema may have changed; no writable fields were inferred.',
+        );
+      return result;
+    } catch (error) {
+      if (error instanceof YCError) throw error;
+      throw new YCError(
+        signal.aborted ? 'CANCELLED' : 'NETWORK_ERROR',
+        'Edit discovery did not complete. No fields were inferred.',
+      );
+    } finally {
+      env.clearTimeout(timer);
+    }
+  }
+
   async function inspectLoadedScripts(
     options: { terms?: string[] | undefined; maxScripts?: number; maxHitsPerTerm?: number } = {},
   ) {
@@ -324,6 +386,7 @@ export function createYCGraphQLClient(env: BrowserEnvironment) {
         query: getIntrospectionQuery({ descriptions: false }),
       }),
     inspectLoadedScripts,
+    inspectEditability,
   });
 }
 

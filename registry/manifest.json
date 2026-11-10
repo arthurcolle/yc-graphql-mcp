@@ -1,0 +1,47 @@
+{
+  "manifest_version": "0.3",
+  "name": "yc-graphql-mcp",
+  "display_name": "YC GraphQL MCP · Distributed Systems",
+  "version": "2.1.0",
+  "description": "Direct YC GraphQL access with live editable fields, typed updates, concurrency checks and verified saves.",
+  "author": { "name": "Arthur Colle", "url": "https://distributed.systems" },
+  "repository": { "type": "git", "url": "https://github.com/arthurcolle/yc-graphql-mcp" },
+  "homepage": "https://github.com/arthurcolle/yc-graphql-mcp",
+  "documentation": "https://github.com/arthurcolle/yc-graphql-mcp#readme",
+  "support": "https://github.com/arthurcolle/yc-graphql-mcp/issues",
+  "icon": "server/node_modules/yc-graphql-mcp/docs/assets/distributed-wordmark.png",
+  "screenshots": ["server/node_modules/yc-graphql-mcp/docs/assets/hero.png"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/node_modules/yc-graphql-mcp/dist/cli.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/node_modules/yc-graphql-mcp/dist/cli.js"],
+      "env": {
+        "YC_MCP_STATE_DIR": "${user_config.state_directory}",
+        "YC_ALLOW_MUTATIONS": "${user_config.allow_mutations}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "keywords": ["yc", "graphql", "applications", "distributed-systems"],
+  "license": "MIT",
+  "privacy_policies": ["https://www.ycombinator.com/legal/#privacy"],
+  "compatibility": { "platforms": ["darwin", "linux"], "runtimes": { "node": ">=22.13.0" } },
+  "user_config": {
+    "state_directory": {
+      "type": "directory",
+      "title": "Private YC state directory",
+      "description": "An owned private directory containing auth.json and durable receipts. Sign in locally before using account tools.",
+      "default": "${HOME}/.local/state/yc-graphql-mcp",
+      "required": true
+    },
+    "allow_mutations": {
+      "type": "boolean",
+      "title": "Enable reviewed changes",
+      "description": "Allow exact-preview commits. Default is read-only.",
+      "default": false,
+      "required": false
+    }
+  }
+}

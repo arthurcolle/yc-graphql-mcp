@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0
+
+- Five new tools: live editability, typed application preview/commit, answer verification and private Markdown export.
+- Current edit forms determine writable fields; no full-edit permission is inferred.
+- Expected-value checks, precommit concurrency/permission checks, exact diffs and automatic read-back.
+- Financial answers protected by default; dedicated workflows retained for uploads and structured data.
+- Guarded commits remain protected even when invoked through the generic mutation tool.
+- Desktop MCPB packaging with official schema validation and an actual extracted-install test.
+- Official registry metadata and GitHub OIDC publishing workflow, plus directory maintainership metadata.
+
 ## 2.0.0
 
 First public release of the Distributed Systems YC GraphQL MCP server.

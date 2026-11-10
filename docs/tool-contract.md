@@ -14,7 +14,7 @@
 | Generic GraphQL discovery only                                 | Three source-observed account/application/profile reads, alongside the generic registry/discovery tools                                                                        |
 | Prototype installation                                         | Typed public ESM API, pinned dependencies, package allowlist and a fresh production-only installation test                                                                     |
 
-The server/package version is 2.0.0. Tool names and the standard result envelope remain compatible; mutation success semantics are deliberately stricter. New receipts carry `version: 2`. Historical receipts are preserved for deduplication. A legacy `succeeded` receipt retains its historical status but commit replay returns `MUTATION_UNVERIFIED`, without sending anything.
+The server/package version is 2.1.0. Tool names and the standard result envelope remain compatible; mutation success semantics are deliberately stricter. New receipts carry `version: 2`. Historical receipts are preserved for deduplication. A legacy `succeeded` receipt retains its historical status but commit replay returns `MUTATION_UNVERIFIED`, without sending anything.
 
 The original console client's named request shape remains available in the browser bundle. Anonymous/multiple operations, mismatched names, subscriptions and executable/schema definitions are rejected. Application identifiers and proposed answer text are caller inputs, not hardcoded mutation targets. The standalone console bundle has no server-side durable receipts.
 
@@ -22,7 +22,7 @@ The original console client's named request shape remains available in the brows
 
 The actor is the local MCP host running a stdio process as the state/auth file owner. Direct HTTP is the default and exposes no listener. The sign-in helper opens a temporary browser for manual authentication, verifies a direct account read, and captures only the required session headers. Node sends those headers only to the fixed YC origin. Optional browser mode instead pairs an extension over an authenticated loopback WebSocket and binds requests to the selected tab/document. YC enforces account and application authorization in both modes.
 
-There are 17 tools, four fixed resources, one receipt resource template and two prompts; see [README](../README.md) for the complete inventory. Tool inputs are strict JSON Schema objects with unknown properties rejected. Identifiers use whole-value ASCII validation, UUIDs have fixed length, and documents/variables have runtime complexity and byte checks. The official SDK validates actual advertised input/output schemas; protocol tests additionally compile them with AJV.
+There are 22 tools, four fixed resources, one receipt resource template and two prompts; see [README](../README.md) for the complete inventory. Tool inputs are strict JSON Schema objects with unknown properties rejected. Identifiers use whole-value ASCII validation, UUIDs have fixed length, and documents/variables have runtime complexity and byte checks. The official SDK validates actual advertised input/output schemas; protocol tests additionally compile them with AJV.
 
 Tools cannot accept credential headers, endpoint overrides, filesystem paths or executable JavaScript. Paths and transport policy are process-level CLI/environment configuration. Extension pairing is a local capability; the token is never placed in a URL. Application content, observed scripts, prompts and upstream errors cannot authorize new actions.
 
@@ -117,3 +117,27 @@ At startup, prepared records expire and dispatched records become uncertain. Str
 | Optional live account smoke                                                              | Built CLI can read application/profile; no mutation sent                                        | Credential-free local verification receipt        |
 
 Dependencies and validator versions are pinned in `package-lock.json`. Automated mutation/browser tests use synthetic accounts and effects. Live checks are opt-in, account-specific and read-only. They do not establish upstream mutation permission or constitute a hosted CI run.
+
+## Version 2.1 contract additions
+
+Five additive tools expose live edit fields, typed preview/commit, independent postcondition comparison and private Markdown export. The original 17 tool names and generic request shapes remain compatible. `YC_ALLOW_MUTATIONS=true` is a process-level equivalent of the existing flag; default policy remains read-only.
+
+Typed preparation reads the current application and bounded HTML metadata. It returns a before/after diff and registers an in-memory precommit guard with the underlying mutation service. Generic commits honor that guard. Changes in answers, submission state or exposed fields stop dispatch. Duplicate guarded commits return busy while the first is running; completed receipts remain non-replayable.
+
+The check is optimistic and not atomic at YC. A race remains possible after the final read. Automatic postcondition verification is separate from receipt business status, and its values are not journaled. A backend `succeeded` result whose fields do not match returns `POSTCONDITION_FAILED` with the original terminal receipt. Failed read-back returns `VERIFICATION_UNAVAILABLE`; neither permits another effect. The independent verification tool reports a current match without attributing causality or rewriting historical receipts.
+
+New error codes: `INVALID_EDIT_FORM`, `EDITABILITY_UNAVAILABLE`, `EDIT_RESTRICTED`, `FIELD_NOT_EDITABLE`, `FIELD_UNSUPPORTED`, `DUPLICATE_FIELD`, `FINANCIAL_CHANGE_BLOCKED`, `PRECONDITION_FAILED`, `NO_CHANGES`, `POSTCONDITION_FAILED`, `VERIFICATION_UNAVAILABLE`.
+
+| Added regression                                                      | Evidence                                                                                      |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Live form metadata, mismatched application IDs, absent full-edit form | Bounded parser and workflow fixtures; authenticated read-only smoke                           |
+| Typed preview is inert and immutable                                  | Exact synthetic before/after diff and one-effect commit                                       |
+| Concurrent answer change through generic commit                       | Guard refuses dispatch, preserves concurrent value                                            |
+| Field removed from current form                                       | No effect after preview                                                                       |
+| Success envelope without changed answer                               | Postcondition error retains receipt, duplicate sends no effect                                |
+| Duplicate fields, stale expectedValue, financial and upload fields    | Stable local rejection                                                                        |
+| Concurrent guarded commits                                            | One synthetic effect                                                                          |
+| Browser field discovery                                               | Actual extension/page fetch in intercepted Chromium test                                      |
+| Desktop bundle                                                        | Official JSON Schema/AJV validation, ZIP extraction, real installed CLI and 22-tool handshake |
+
+The official MCPB schema is vendored with its license; fflate is used only to serialize ZIP files. Registry publishing uses a pinned verified binary and GitHub OIDC. Public metadata includes no account credentials. A directory maintainership file is not a claim that a listing was accepted.

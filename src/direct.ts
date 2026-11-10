@@ -178,6 +178,9 @@ export class DirectTransport implements YCTransport {
         case 'introspectSchema':
           data = await client.introspectSchema();
           break;
+        case 'inspectEditability':
+          data = await client.inspectEditability(task.appUuid);
+          break;
         case 'inspectLoadedScripts': {
           const htmlSignal = AbortSignal.any([operationSignal, AbortSignal.timeout(10_000)]);
           const response = await abortable(

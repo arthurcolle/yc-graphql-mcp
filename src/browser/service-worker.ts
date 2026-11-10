@@ -33,6 +33,9 @@ async function inPage(task: BrowserTask) {
       case 'introspectSchema':
         data = await client.introspectSchema();
         break;
+      case 'inspectEditability':
+        data = await client.inspectEditability(task.appUuid);
+        break;
       case 'inspectLoadedScripts':
         data = await client.inspectLoadedScripts(task.input);
         break;

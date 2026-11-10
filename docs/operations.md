@@ -89,3 +89,13 @@ SIGINT, SIGTERM, stdin EOF, protocol closure and broken output trigger shutdown.
 The package is private and is not automatically published. CI files are supplied, but hosted execution is not implied when the checkout has not been pushed to a repository.
 
 YC's API is not a versioned public integration contract. Built-in read documents are source-observed and can require updates if YC changes the schema. Introspection may be disabled. The generic named-query registry and script inspection provide discovery within the authenticated account; they do not authorize access to other accounts or bypass server restrictions. Application update permissions are enforced by YC, and backend rejection must be respected even when a field is present in a GraphQL input type.
+
+## Typed updates and distribution (2.1)
+
+Live edit discovery makes five fixed-origin HTML reads with a 25-second overall deadline, at most 2 MB per page and 6 MB total. It parses only recognized JSON hydration metadata, returns field labels and required flags, and never executes fetched JavaScript. Unknown or mismatched forms fail closed.
+
+Typed updates contain 1–30 unique text/null fields, each at most 20,000 characters, and remain subject to the existing 100 KB variables limit. The workflow holds at most 100 ten-minute previews. Expected values, current submission state and live form permissions are checked before dispatch. This is not an upstream atomic transaction. Verification failures retain the original terminal receipt and never replay a mutation. Private baseline/verification values are not persisted in receipts; restart expires previews.
+
+`YC_ALLOW_MUTATIONS=true` is an explicit process-level opt-in used by desktop bundle configuration. Other values leave the default disabled. The bundle requires Node 22.13+ and declares macOS/Linux compatibility. It contains Node production dependencies, not a Chromium binary or saved session. Sign in locally and use the same private state directory in your MCP host; see the bundle guide.
+
+Registry metadata is generated from the actual bundle hash and published through a manually dispatched, verified-tag GitHub workflow using OIDC. Do not overwrite artifacts under a published version URL. After partial publishing failure, inspect release assets and the public record before resuming.

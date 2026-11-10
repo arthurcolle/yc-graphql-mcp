@@ -1,0 +1,57 @@
+name: Publish MCP Registry
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing verified release tag version, without v
+        required: true
+        default: 2.1.0
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/v${{ inputs.version }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Verify release identity
+        run: |
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; assert.match(process.env.RELEASE_VERSION,/^[0-9]+\.[0-9]+\.[0-9]+(?![\s\S])/); assert.equal(JSON.parse(readFileSync("package.json")).version,process.env.RELEASE_VERSION);'
+      - run: npm ci --ignore-scripts
+      - run: npm run public:check
+      - run: npm run verify
+      - run: npm run bundle
+      - name: Upload validated bundle and metadata
+        run: gh release upload "v${RELEASE_VERSION}" "artifacts/yc-graphql-mcp-${RELEASE_VERSION}.mcpb" artifacts/server.json artifacts/SHA256SUMS
+      - name: Install pinned registry publisher
+        run: |
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/publisher.tar.gz" https://github.com/modelcontextprotocol/registry/releases/download/v1.8.8/mcp-publisher_linux_amd64.tar.gz
+          echo "09f1fa70ee146b640584274a1a6b2b8a0310b05d4321fa9224e6df6a016d67f4  $RUNNER_TEMP/publisher.tar.gz" | sha256sum --check
+          tar xzf "$RUNNER_TEMP/publisher.tar.gz" -C "$RUNNER_TEMP" mcp-publisher
+      - name: Validate public registry metadata
+        run: '$RUNNER_TEMP/mcp-publisher validate artifacts/server.json'
+      - name: Authenticate with GitHub OIDC
+        run: '$RUNNER_TEMP/mcp-publisher login github-oidc'
+      - name: Publish official listing
+        run: '$RUNNER_TEMP/mcp-publisher publish artifacts/server.json'
+      - name: Verify published version
+        run: |
+          curl --fail --silent --show-error --output "$RUNNER_TEMP/published.json" "https://registry.modelcontextprotocol.io/v0.1/servers/io.github.arthurcolle%2Fyc-graphql-mcp/versions/${RELEASE_VERSION}"
+          node --input-type=module -e 'import {readFileSync} from "node:fs";import assert from "node:assert/strict";const published=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/published.json"));assert.equal(published.server.version,process.env.RELEASE_VERSION);const expected=JSON.parse(readFileSync("artifacts/server.json"));assert.equal(published.server.packages[0].fileSha256,expected.packages[0].fileSha256);'

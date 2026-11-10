@@ -1,13 +1,19 @@
 {
   "manifest_version": 3,
   "name": "YC GraphQL MCP Bridge",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Run YC GraphQL operations in your selected signed-in application tab.",
   "minimum_chrome_version": "116",
   "permissions": ["scripting", "storage"],
   "host_permissions": ["https://apply.ycombinator.com/*", "http://127.0.0.1/*"],
-  "background": { "service_worker": "service-worker.js", "type": "module" },
-  "action": { "default_popup": "popup.html", "default_title": "YC MCP Bridge" },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "YC MCP Bridge"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src ws://127.0.0.1:*"
   }

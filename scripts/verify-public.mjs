@@ -42,6 +42,7 @@ function privateIdentifiers(directory) {
 privateIdentifiers(privateRoot);
 const scriptAllowlist = new Set([
   'build-browser.mjs',
+  'build-bundle.mjs',
   'clean.mjs',
   'verify-package.mjs',
   'verify-public.mjs',

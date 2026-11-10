@@ -15,7 +15,9 @@ artifacts/
 /examples/
 /scripts/*.mjs
 !/scripts/build-browser.mjs
+!/scripts/build-bundle.mjs
 !/scripts/clean.mjs
 !/scripts/verify-package.mjs
 !/scripts/live-smoke.mjs
 !/scripts/verify-public.mjs
+.mcpregistry*

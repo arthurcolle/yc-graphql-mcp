@@ -35,7 +35,7 @@ for (const modern of [false, true]) {
     try {
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 17);
+      assert.equal(listed.tools.length, 22);
       const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: false });
       for (const tool of listed.tools) {
         assert.equal(tool.inputSchema.additionalProperties, false);

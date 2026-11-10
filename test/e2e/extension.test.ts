@@ -50,6 +50,22 @@ test(
           const headers = await request.allHeaders();
           observed.push({ csrf: headers['x-csrf-token'], cookie: headers.cookie });
           const body = request.postDataJSON();
+          if (body.operationName === 'YCGetApplication')
+            return route.fulfill({
+              json: {
+                data: {
+                  app: {
+                    uuid: body.variables.appUuid,
+                    submitted: true,
+                    submittedAt: '2026-01-01T00:00:00Z',
+                    status: 'submitted',
+                    editable: true,
+                    fullEditable: false,
+                    questions: { howfar: storedText },
+                  },
+                },
+              },
+            });
           if (body.operationName === 'Write') {
             effects++;
             storedText = body.variables.text;
@@ -75,6 +91,24 @@ test(
             contentType: 'application/javascript',
             body: 'window.fixtureLoaded = true; /* SHOW_APP observed fixture operation */',
           });
+        if (/\/apps\/[a-f0-9-]{36}\/edit/.test(url.pathname)) {
+          const kind = url.pathname.split('/').at(-1)!;
+          if (kind === 'full') return route.fulfill({ status: 404, body: '' });
+          const props =
+            kind === 'edit'
+              ? { visibleUpdateKinds: { progress: true } }
+              : {
+                  app_uuid: url.pathname.split('/')[2],
+                  update_kind: kind,
+                  active_question_groups: {
+                    Progress: { howfar: { prompt: { q: 'How far along?', required: false } } },
+                  },
+                };
+          return route.fulfill({
+            contentType: 'text/html',
+            body: `<script type="application/json">mount({component: "components/${kind === 'edit' ? 'ChooseUpdateKind' : 'AppForm'}", props: ${JSON.stringify(props)}\n})</script>`,
+          });
+        }
         return route.fulfill({
           contentType: 'text/html',
           headers: {
@@ -113,6 +147,13 @@ test(
       );
       assert.equal(graphqlCalls, 0, 'pairing must make no YC GraphQL request');
       assert.equal((await call('yc_status')).data.connected, true);
+      const editability = await call('yc_get_editability', {
+        appUuid: '63a4d22c-1096-443e-894b-349e9c46fabb',
+      });
+      assert.equal(editability.ok, true);
+      assert.ok(
+        editability.data.forms.some((form: any) => form.groups[0].fields[0].field === 'howfar'),
+      );
       assert.equal((await call('yc_describe_schema')).data.__schema.queryType.name, 'Query');
       assert.equal((await call('yc_describe_type', { name: 'Query' })).data.__type.name, 'Query');
       const scripts = await call('yc_inspect_scripts', { terms: ['SHOW_APP'] });

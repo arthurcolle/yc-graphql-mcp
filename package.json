@@ -1,6 +1,6 @@
 {
   "name": "yc-graphql-mcp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Direct HTTP YC GraphQL MCP server with private sessions and durable mutation receipts",
   "type": "module",
   "private": true,
@@ -36,12 +36,13 @@
     "start": "node dist/cli.js",
     "login": "node dist/cli.js login",
     "live:check": "node scripts/live-smoke.mjs",
-    "format": "prettier --write src test scripts/build-browser.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md",
-    "format:check": "prettier --check src test scripts/build-browser.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md",
+    "format": "prettier --write src test scripts/build-browser.mjs scripts/build-bundle.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md registry/manifest.json registry/server.template.json",
+    "format:check": "prettier --check src test scripts/build-browser.mjs scripts/build-bundle.mjs scripts/clean.mjs scripts/verify-package.mjs scripts/live-smoke.mjs scripts/verify-public.mjs package.json tsconfig.json extension/manifest.json .github .prettierrc.json README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs/*.md registry/manifest.json registry/server.template.json",
     "public:check": "node scripts/verify-public.mjs",
     "pack:verify": "node scripts/verify-package.mjs",
     "prepack": "npm run build",
-    "verify": "npm run format:check && npm run check && npm run build && npm test"
+    "verify": "npm run format:check && npm run check && npm run build && npm test",
+    "bundle": "node scripts/build-bundle.mjs"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -60,6 +61,8 @@
     "CHANGELOG.md",
     "docs/tool-contract.md",
     "docs/operations.md",
+    "docs/bundle.md",
+    "registry/README.md",
     "docs/assets/**"
   ],
   "dependencies": {
@@ -76,9 +79,12 @@
     "@types/node": "22.20.5",
     "@types/ws": "8.18.2",
     "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
     "esbuild": "0.28.2",
+    "fflate": "0.8.3",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
-  }
+  },
+  "mcpName": "io.github.arthurcolle/yc-graphql-mcp"
 }

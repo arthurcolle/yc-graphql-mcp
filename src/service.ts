@@ -10,6 +10,8 @@ export class YCService {
   private prepared = new Map<string, ReturnType<typeof normalizeRequest>>();
   private active = new Set<Promise<unknown>>();
   private closing = false;
+  private guards = new Map<string, (signal?: AbortSignal) => Promise<void>>();
+  private guardedCommits = new Set<string>();
   constructor(
     readonly bridge: YCTransport,
     readonly store: StateStore,
@@ -75,6 +77,7 @@ export class YCService {
       if (Date.now() - Date.parse(stale.createdAt) > 600_000) {
         this.store.record({ ...stale, status: 'expired', updatedAt: new Date().toISOString() });
         this.prepared.delete(id);
+        this.guards.delete(id);
       }
     }
     const operation = normalizeRequest(input);
@@ -140,7 +143,31 @@ export class YCService {
     return { receipt, preview: structuredClone(operation), expiresInSeconds: 600, replay: false };
   }
   commit(id: string, confirmDigest: string, signal?: AbortSignal) {
-    return this.track(this.commitInternal(id, confirmDigest, signal));
+    if (this.guardedCommits.has(id))
+      return Promise.reject(
+        new YCError('BRIDGE_BUSY', 'This guarded commit is already in progress.'),
+      );
+    if (!this.guards.has(id)) return this.track(this.commitInternal(id, confirmDigest, signal));
+    this.guardedCommits.add(id);
+    return this.track(
+      this.commitInternal(id, confirmDigest, signal).finally(() => {
+        this.guardedCommits.delete(id);
+        if (this.store.getReceipt(id).status !== 'prepared') this.guards.delete(id);
+      }),
+    );
+  }
+  prepareGuarded(
+    input: GraphQLRequest & { idempotencyKey: string },
+    guard: (signal?: AbortSignal) => Promise<void>,
+  ) {
+    const result = this.prepare(input);
+    if (result.replay)
+      throw new YCError(
+        'IDEMPOTENCY_CONFLICT',
+        'This key already belongs to a prepared or completed operation. Use its original workflow.',
+      );
+    this.guards.set(result.receipt.id, guard);
+    return result;
   }
   private async commitInternal(id: string, confirmDigest: string, signal?: AbortSignal) {
     if (this.closing) throw new YCError('SERVER_STOPPED', 'The server is shutting down.');
@@ -215,6 +242,9 @@ export class YCService {
       this.prepared.delete(id);
       throw new YCError('PREVIEW_EXPIRED', 'Prepare a fresh preview with a new idempotencyKey.');
     }
+    const guard = this.guards.get(id);
+    if (guard) await guard(signal);
+    if (this.closing) throw new YCError('SERVER_STOPPED', 'The server is shutting down.');
     const target = this.bridge.currentTarget();
     const currentDigest = createHash('sha256')
       .update(

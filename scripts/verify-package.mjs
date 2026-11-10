@@ -39,7 +39,12 @@ try {
         file.startsWith('dist/') ||
         file.startsWith('extension/dist/') ||
         file.startsWith('docs/assets/') ||
-        ['docs/tool-contract.md', 'docs/operations.md'].includes(file),
+        [
+          'docs/tool-contract.md',
+          'docs/operations.md',
+          'docs/bundle.md',
+          'registry/README.md',
+        ].includes(file),
     );
   }
   const installed = join(directory, 'installed');
@@ -59,13 +64,13 @@ try {
     { encoding: 'utf8', maxBuffer: 4_000_000, timeout: 120_000 },
   );
   const root = join(installed, 'node_modules', 'yc-graphql-mcp');
-  assert.equal(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version, '2.0.0');
+  assert.equal(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version, '2.1.0');
   execFileSync(
     process.execPath,
     [
       '--input-type=module',
       '-e',
-      "import { VERSION, DirectTransport, StateStore } from 'yc-graphql-mcp'; if (VERSION !== '2.0.0' || !DirectTransport || !StateStore) process.exit(1);",
+      "import { VERSION, DirectTransport, StateStore } from 'yc-graphql-mcp'; if (VERSION !== '2.1.0' || !DirectTransport || !StateStore) process.exit(1);",
     ],
     { cwd: installed },
   );
@@ -85,7 +90,7 @@ try {
   try {
     await client.connect(transport);
     const tools = await client.listTools();
-    assert.equal(tools.tools.length, 17);
+    assert.equal(tools.tools.length, 22);
     const status = await client.callTool({ name: 'yc_status', arguments: {} });
     assert.equal(status.structuredContent.ok, true);
     assert.equal(status.structuredContent.data.connected, false);
@@ -112,8 +117,8 @@ try {
   console.log(
     JSON.stringify({
       productionInstall: 'passed',
-      version: '2.0.0',
-      tools: 17,
+      version: '2.1.0',
+      tools: 22,
       packagedFiles: files.length,
       privateFilesIncluded: false,
       devDependenciesRequired: false,

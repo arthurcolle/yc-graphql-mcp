@@ -40,7 +40,7 @@ async function main() {
     options: {
       port: { type: 'string', default: process.env.YC_BRIDGE_PORT ?? '17373' },
       'state-dir': { type: 'string' },
-      'allow-mutations': { type: 'boolean', default: false },
+      'allow-mutations': { type: 'boolean', default: process.env.YC_ALLOW_MUTATIONS === 'true' },
       transport: { type: 'string', default: process.env.YC_TRANSPORT ?? 'direct' },
       'auth-file': { type: 'string' },
       'log-level': { type: 'string', default: 'warn' },

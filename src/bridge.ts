@@ -163,6 +163,10 @@ export class BrowserBridge {
           RESPONSE_TOO_COMPLEX:
             'YC response exceeds the nesting or node limit. Request fewer fields.',
           CANCELLED: 'The browser operation was cancelled.',
+          INVALID_APPLICATION: 'A valid application UUID is required.',
+          INVALID_EDIT_FORM: 'YC edit metadata is invalid or does not match the application.',
+          EDITABILITY_UNAVAILABLE:
+            'No recognized edit forms were found. No writable fields were inferred.',
         };
         const code = Object.hasOwn(known, reply.data.error.code)
           ? reply.data.error.code
